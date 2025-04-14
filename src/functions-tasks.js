@@ -115,7 +115,7 @@ function getPolynom(...args) {
  */
 function memoize(func, ...args) {
   const memo = {};
-  return function () {
+  return function memoizer() {
     let data;
     if (typeof args[0] === 'object') {
       data = JSON.stringify(args);
@@ -146,8 +146,18 @@ function memoize(func, ...args) {
  * }, 2);
  * retryer() => 2
  */
-function retry(/* func, attempts */) {
-  throw new Error('Not implemented');
+function retry(func, attempts) {
+  return () => {
+    let attempt = 0;
+    while (attempt < attempts) {
+      try {
+        return func();
+      } catch (e) {
+        attempt += 1;
+      }
+    }
+    return func();
+  };
 }
 
 /**
@@ -173,8 +183,14 @@ function retry(/* func, attempts */) {
  * cos(3.141592653589793) ends
  *
  */
-function logger(/* func, logFunc */) {
-  throw new Error('Not implemented');
+function logger(func, logFunc) {
+  return function loggerWrapper(...args) {
+    const argsToString = args.map((arg) => JSON.stringify(arg)).join(',');
+    logFunc(`${func.name}(${argsToString}) starts`);
+    const completed = func(...args);
+    logFunc(`${func.name}(${argsToString}) ends`);
+    return completed;
+  };
 }
 
 /**
